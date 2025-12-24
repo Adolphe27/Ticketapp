@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRANS DAVID | Premium Logistique V5</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #2563eb; --primary-dark: #1e40af; --accent: #f59e0b;
+            --dark: #0f172a; --light: #f8fafc; --shadow: 0 20px 40px rgba(0,0,0,0.1);
+            --danger: #ef4444; --success: #10b981;
+            --bg-app: #f1f5f9; --bg-card: #ffffff; --text-main: #334155; --text-muted: #64748b;
+            --border: #e2e8f0; --input-bg: #f8fafc;
+        }
+
+        .dark-mode {
+            --bg-app: #020617; --bg-card: #0f172a; --text-main: #f1f5f9; --text-muted: #94a3b8;
+            --border: #1e293b; --input-bg: #020617; --light: #0f172a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; transition: background 0.3s, color 0.3s; }
+        body { background-color: var(--bg-app); color: var(--text-main); height: 100vh; overflow: hidden; }
+
+        /* --- LOGIN SCREEN --- */
+        #login-screen { position: fixed; inset: 0; background: #020617; display: flex; justify-content: center; align-items: center; z-index: 5000; }
+        #rain-canvas { position: absolute; inset: 0; z-index: 1; opacity: 0.4; }
+        .login-card { position: relative; z-index: 10; background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(25px); padding: 50px; border-radius: 40px; border: 1px solid rgba(255, 255, 255, 0.1); width: 420px; text-align: center; }
+        .key-container { width: 90px; height: 90px; background: linear-gradient(135deg, #fbbf24, #d97706); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 30px; animation: fastPulse 1.5s infinite ease-in-out, keyShake 0.4s infinite alternate; }
+        @keyframes fastPulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(245, 158, 11, 0.4); } 50% { transform: scale(1.15); box-shadow: 0 0 50px rgba(245, 158, 11, 0.8); } }
+        @keyframes keyShake { from { transform: rotate(-10deg); } to { transform: rotate(10deg); } }
+
+        /* --- LAYOUT --- */
+        #app-container { display: none; height: 100vh; }
+        .sidebar { width: 300px; background: var(--bg-card); padding: 40px 25px; border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+        .nav-item { padding: 16px 20px; border-radius: 18px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 15px; margin-bottom: 8px; font-weight: 500; }
+        .nav-item.active { background: var(--primary); color: white; box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25); }
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; }
+
+        /* --- UI ELEMENTS --- */
+        .glass-panel { background: var(--bg-card); border-radius: 30px; padding: 35px; box-shadow: var(--shadow); margin-bottom: 25px; border: 1px solid var(--border); }
+        .label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: block; }
+        .premium-input { width: 100%; padding: 15px 20px; border-radius: 15px; border: 2px solid var(--border); background: var(--input-bg); color: var(--text-main); font-size: 15px; outline: none; }
+        .premium-input:focus { border-color: var(--primary); }
+        .premium-input:disabled { opacity: 0.5; cursor: not-allowed; background: #e2e8f0; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .full { grid-column: span 2; }
+
+        .btn { padding: 15px; border-radius: 15px; border: none; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 10px; justify-content: center; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
+        .btn-outline { border: 2px solid var(--primary); color: var(--primary); background: transparent; }
+
+        /* Mode Sombre Switch */
+        .theme-toggle { margin-top: 20px; padding: 15px; border-radius: 15px; background: var(--input-bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 600; color: var(--text-main); }
+
+        /* --- MODAL PDF --- */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); display: none; justify-content: center; align-items: center; z-index: 6000; }
+        .modal-content { background: white; width: 850px; border-radius: 30px; overflow: hidden; color: #0f172a; }
+        .receipt-header { background: #0f172a; color: white; padding: 35px; display: flex; justify-content: space-between; align-items: center; }
+        .receipt-body { padding: 40px; display: grid; grid-template-columns: 1.5fr 1fr; gap: 30px; }
+
+        table { width: 100%; border-collapse: collapse; color: var(--text-main); }
+        th { text-align: left; padding: 15px; color: var(--text-muted); font-size: 11px; border-bottom: 2px solid var(--border); }
+        td { padding: 15px; border-bottom: 1px solid var(--border); font-size: 14px; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #ticket-modal, #ticket-modal * { visibility: visible; }
+            #ticket-modal { position: fixed; inset: 0; background: white; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. LOGIN SCREEN -->
+    <div id="login-screen">
+        <canvas id="rain-canvas"></canvas>
+        <div class="login-card">
+            <div class="key-container"><i class="fas fa-key"></i></div>
+            <h1 style="color:white; font-size:28px;">TRANS DAVID</h1>
+            <p style="color:rgba(255,255,255,0.4); font-size:12px; margin-bottom:30px;">AUTHENTIFICATION REQUISE</p>
+            <input type="password" id="admin-pass-input" class="premium-input" style="background:rgba(255,255,255,0.05); color:white;" placeholder="Mot de passe">
+            <button class="btn btn-primary" style="width: 100%; margin-top: 20px;" onclick="handleLogin()">ACCÉDER</button>
+        </div>
+    </div>
+
+    <!-- 2. MAIN APP -->
+    <div id="app-container">
+        <div class="sidebar">
+            <div style="font-weight:800; font-size:22px; color:var(--primary); margin-bottom:40px;"><i class="fas fa-shipping-fast"></i> TD LOGISTIC</div>
+            
+            <nav style="flex: 1;">
+                <div class="nav-item active" onclick="switchTab('tab-new', this)"><i class="fas fa-plus-circle"></i> Nouveau Colis</div>
+                <div class="nav-item" onclick="switchTab('tab-history', this)"><i class="fas fa-history"></i> Historique</div>
+                <div class="nav-item" onclick="switchTab('tab-stats', this)"><i class="fas fa-chart-pie"></i> Statistiques</div>
+                <div class="nav-item" onclick="switchTab('tab-settings', this)"><i class="fas fa-cog"></i> Sécurité</div>
+            </nav>
+
+            <!-- BOUTON MODE SOMBRE -->
+            <div class="theme-toggle" onclick="toggleDarkMode()">
+                <i class="fas fa-moon"></i> <span>Mode Sombre</span>
+            </div>
+
+            <div class="nav-item" onclick="location.reload()" style="color:var(--danger); margin-top: 20px;"><i class="fas fa-sign-out-alt"></i> Déconnexion</div>
+        </div>
+
+        <div class="main-content">
+            
+            <!-- SECTION : NOUVEAU COLIS -->
+            <div id="tab-new" class="tab-content">
+                <div class="glass-panel">
+                    <h2 style="margin-bottom:25px;"><i class="fas fa-edit"></i> Nouveau Bordereau</h2>
+                    <div class="form-grid">
+                        <div><span class="label">Date</span><input type="date" id="p-date" class="premium-input"></div>
+                        <div>
+                            <span class="label">Destination (Réception)</span>
+                            <select id="p-dest" class="premium-input">
+                                <option value="MATADI">MATADI</option>
+                                <option value="BOMA">BOMA</option>
+                                <option value="MOANDA">MOANDA</option>
+                            </select>
+                        </div>
+
+                        <div><span class="label">Expéditeur (Nom)</span><input type="text" id="p-sender" class="premium-input" placeholder="Nom"></div>
+                        <div><span class="label">Expéditeur (Tél - Optionnel)</span><input type="text" id="p-sender-tel" class="premium-input" placeholder="Numéro de téléphone"></div>
+                        
+                        <div><span class="label">Récepteur (Nom)</span><input type="text" id="p-receiver" class="premium-input" placeholder="Nom"></div>
+                        <div><span class="label">Récepteur (Tél - Optionnel)</span><input type="text" id="p-receiver-tel" class="premium-input" placeholder="Numéro de téléphone"></div>
+
+                        <div style="border-top: 1px solid var(--border); padding-top:20px;" class="full"></div>
+
+                        <!-- SECURITÉ TAXATEUR -->
+                        <div>
+                            <span class="label">Nom de l'Agent (Taxateur)</span>
+                            <div style="display:flex; gap:10px;">
+                                <input type="text" id="p-agent" class="premium-input" placeholder="Nom de l'agent" disabled>
+                                <button class="btn btn-outline" style="padding:0 15px;" onclick="unlockAgent()" id="btn-lock"><i class="fas fa-lock"></i></button>
+                            </div>
+                        </div>
+                        <div><span class="label">Total Taxe (FC)</span><input type="number" id="p-price-total" class="premium-input" value="50000"></div>
+
+                        <div>
+                            <span class="label">Statut Paiement</span>
+                            <select id="p-pay-status" class="premium-input" onchange="toggleAvance()">
+                                <option value="total">Payé Totalement</option>
+                                <option value="partie">Paiement Partiel</option>
+                                <option value="arrivée">À l'Arrivée</option>
+                            </select>
+                        </div>
+                        <div id="div-avance" style="display:none;"><span class="label">Avance (FC)</span><input type="number" id="p-price-paid" class="premium-input" value="0"></div>
+
+                        <div class="full">
+                            <span class="label">Description (Max 5000 car.)</span>
+                            <textarea id="p-desc" class="premium-input" style="height:100px; resize:none;" maxlength="5000"></textarea>
+                        </div>
+                        <div class="full">
+                            <button class="btn btn-primary" style="width: 100%;" onclick="createParcel()"><i class="fas fa-save"></i> VALIDER L'ENREGISTREMENT</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION : HISTORIQUE -->
+            <div id="tab-history" class="tab-content" style="display:none;">
+                <div class="glass-panel">
+                    <input type="text" id="search-input" class="premium-input" placeholder="Rechercher par Numéro KN ou Nom..." onkeyup="filterHistory()" style="margin-bottom:20px;">
+                    <table>
+                        <thead>
+                            <tr><th>Nº Colis</th><th>Expéditeur</th><th>Récepteur</th><th>Agent</th><th>Reste</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="history-list"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SECTION : STATS -->
+            <div id="tab-stats" class="tab-content" style="display:none;">
+                <div class="form-grid">
+                    <div class="glass-panel" style="text-align:center;"><span class="label">Colis du Jour</span><div id="stat-count" style="font-size:35px; font-weight:800;">0</div></div>
+                    <div class="glass-panel" style="text-align:center;"><span class="label">Caisse Totale</span><div id="stat-cash" style="font-size:35px; font-weight:800; color:var(--success);">0 FC</div></div>
+                </div>
+            </div>
+
+            <!-- SECTION : SETTINGS -->
+            <div id="tab-settings" class="tab-content" style="display:none;">
+                <div class="glass-panel" style="max-width:500px;">
+                    <h3>Sécurité Admin</h3>
+                    <br>
+                    <input type="password" id="old-pass" class="premium-input" placeholder="Ancien Code" style="margin-bottom:10px;">
+                    <input type="password" id="new-pass" class="premium-input" placeholder="Nouveau Code" style="margin-bottom:10px;">
+                    <input type="password" id="conf-pass" class="premium-input" placeholder="Confirmer" style="margin-bottom:20px;">
+                    <button class="btn btn-primary" style="width:100%;" onclick="updatePassword()">CHANGER LE CODE</button>
+                    <hr style="margin:20px 0; border:0; border-top:1px solid var(--border);">
+                    <button class="btn" style="width:100%; color:var(--danger);" onclick="secureReset()">RÉINITIALISER TOUT</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TICKET MODAL -->
+    <div id="ticket-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="receipt-header">
+                <div><h1 style="font-weight:900;">TRANS DAVID</h1><p style="opacity:0.7;">BORDEREAU OFFICIEL</p></div>
+                <div id="t-id-badge" style="background:white; color:black; padding:10px 20px; border-radius:10px; font-weight:900;"></div>
+            </div>
+            <div class="receipt-body">
+                <div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px;">
+                        <div><span class="label">Expéditeur</span><p id="t-sender" style="font-weight:700;"></p><p id="t-sender-tel" style="font-size:12px;"></p></div>
+                        <div><span class="label">Récepteur</span><p id="t-receiver" style="font-weight:700;"></p><p id="t-receiver-tel" style="font-size:12px;"></p></div>
+                        <div><span class="label">Destination</span><p id="t-dest" style="font-weight:700;"></p></div>
+                        <div><span class="label">Agent</span><p id="t-agent" style="font-weight:700;"></p></div>
+                    </div>
+                    <span class="label">Description</span>
+                    <div id="t-desc" style="background:#f1f5f9; padding:15px; border-radius:10px; font-size:13px; margin-bottom:15px;"></div>
+                    <div style="background:#f8fafc; padding:15px; border-radius:15px; border:1px solid #ddd;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>Total :</span><strong id="t-total"></strong></div>
+                        <div style="display:flex; justify-content:space-between; color:green;"><span>Payé :</span><strong id="t-paid"></strong></div>
+                        <hr style="margin:5px 0;">
+                        <div style="display:flex; justify-content:space-between; color:red; font-size:18px;"><span>Reste :</span><strong id="t-rest"></strong></div>
+                    </div>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; border-left:1px dashed #ddd;">
+                    <div id="qrcode"></div>
+                </div>
+            </div>
+            <div class="no-print" style="padding:20px; text-align:right;">
+                <button class="btn" style="display:inline-flex; width:auto; background:#eee;" onclick="closeTicket()">FERMER</button>
+                <button class="btn btn-primary" style="display:inline-flex; width:auto;" onclick="window.print()">IMPRIMER PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let state = {
+            parcels: JSON.parse(localStorage.getItem('td_db_v5')) || [],
+            adminPass: localStorage.getItem('td_key_v5') || 'admin123',
+            darkMode: localStorage.getItem('td_dark') === 'true'
+        };
+
+        // --- EFFET PLUIE ---
+        const canvas = document.getElementById('rain-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        let drops = [];
+        for(let i=0; i<100; i++) drops.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, s:Math.random()*15+5});
+        function rain() {
+            ctx.clearRect(0,0,canvas.width, canvas.height); ctx.strokeStyle='rgba(255,255,255,0.2)';
+            drops.forEach(d => { ctx.beginPath(); ctx.moveTo(d.x,d.y); ctx.lineTo(d.x,d.y+10); ctx.stroke(); d.y+=d.s; if(d.y>canvas.height) d.y=-10; });
+            requestAnimationFrame(rain);
+        }
+        rain();
+
+        // --- DARK MODE ---
+        function toggleDarkMode() {
+            state.darkMode = !state.darkMode;
+            document.body.classList.toggle('dark-mode', state.darkMode);
+            localStorage.setItem('td_dark', state.darkMode);
+            document.querySelector('.theme-toggle span').innerText = state.darkMode ? "Mode Clair" : "Mode Sombre";
+            document.querySelector('.theme-toggle i').className = state.darkMode ? "fas fa-sun" : "fas fa-moon";
+        }
+        if(state.darkMode) { document.body.classList.add('dark-mode'); toggleDarkMode(); toggleDarkMode(); }
+
+        // --- AUTH & SECURITY ---
+        function handleLogin() {
+            if(document.getElementById('admin-pass-input').value === state.adminPass) {
+                document.getElementById('login-screen').style.display='none';
+                document.getElementById('app-container').style.display='flex';
+                document.getElementById('p-date').valueAsDate = new Date();
+                refreshAll();
+            } else alert("Code incorrect");
+        }
+
+        function unlockAgent() {
+            const pass = prompt("Saisissez le code ADMINISTRATEUR pour activer le taxateur :");
+            if(pass === state.adminPass) {
+                document.getElementById('p-agent').disabled = false;
+                document.getElementById('p-agent').focus();
+                document.getElementById('btn-lock').innerHTML = '<i class="fas fa-lock-open"></i>';
+                document.getElementById('btn-lock').style.color = 'var(--success)';
+            } else alert("Accès refusé");
+        }
+
+        function switchTab(id, el) {
+            document.querySelectorAll('.tab-content').forEach(t => t.style.display='none');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(id).style.display='block'; el.classList.add('active');
+            if(id === 'tab-stats') updateStats();
+        }
+
+        function toggleAvance() {
+            const status = document.getElementById('p-pay-status').value;
+            document.getElementById('div-avance').style.display = (status === 'partie') ? 'block' : 'none';
+        }
+
+        // --- CORE LOGIC ---
+        function createParcel() {
+            const s = document.getElementById('p-sender').value;
+            const r = document.getElementById('p-receiver').value;
+            const a = document.getElementById('p-agent').value;
+            const date = document.getElementById('p-date').value;
+            const dest = document.getElementById('p-dest').value;
+
+            if(!s || !r || !a) return alert("Veuillez saisir l'expéditeur, le récepteur et l'agent (Taxateur activé) !");
+
+            const total = parseFloat(document.getElementById('p-price-total').value) || 0;
+            const status = document.getElementById('p-pay-status').value;
+            let paid = (status === 'total') ? total : (status === 'partie' ? parseFloat(document.getElementById('p-price-paid').value) : 0);
+
+            const dt = new Date(date);
+            const counter = String(state.parcels.length + 1).padStart(3, '0');
+            const parcelID = `KN/${counter}/${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}`;
+
+            const parcel = { 
+                id: parcelID, sender: s, sender_tel: document.getElementById('p-sender-tel').value,
+                receiver: r, receiver_tel: document.getElementById('p-receiver-tel').value,
+                dest, agent: a, date, total, paid, rest: total-paid, desc: document.getElementById('p-desc').value
+            };
+
+            state.parcels.push(parcel);
+            localStorage.setItem('td_db_v5', JSON.stringify(state.parcels));
+            showTicket(parcel);
+            refreshAll();
+        }
+
+        function filterHistory() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const list = document.getElementById('history-list');
+            list.innerHTML = "";
+            state.parcels.slice().reverse().forEach(p => {
+                if(p.id.toLowerCase().includes(query) || p.sender.toLowerCase().includes(query) || p.receiver.toLowerCase().includes(query)) {
+                    list.innerHTML += `<tr><td>${p.id}</td><td>${p.sender}</td><td>${p.receiver}</td><td>${p.agent}</td><td style="color:var(--danger)">${p.rest.toLocaleString()}</td><td><button class="btn btn-primary" style="padding:5px 10px; font-size:11px;" onclick='showTicket(${JSON.stringify(p)})'>VOIR</button></td></tr>`;
+                }
+            });
+        }
+
+        function showTicket(p) {
+            document.getElementById('t-id-badge').innerText = p.id;
+            document.getElementById('t-sender').innerText = p.sender;
+            document.getElementById('t-sender-tel').innerText = p.sender_tel || "Pas de numéro";
+            document.getElementById('t-receiver').innerText = p.receiver;
+            document.getElementById('t-receiver-tel').innerText = p.receiver_tel || "Pas de numéro";
+            document.getElementById('t-dest').innerText = p.dest;
+            document.getElementById('t-agent').innerText = p.agent;
+            document.getElementById('t-desc').innerText = p.desc;
+            document.getElementById('t-total').innerText = p.total.toLocaleString() + " FC";
+            document.getElementById('t-paid').innerText = p.paid.toLocaleString() + " FC";
+            document.getElementById('t-rest').innerText = p.rest.toLocaleString() + " FC";
+            document.getElementById('qrcode').innerHTML = "";
+            new QRCode(document.getElementById('qrcode'), { text: p.id, width: 120, height: 120 });
+            document.getElementById('ticket-modal').style.display='flex';
+        }
+
+        function closeTicket() { document.getElementById('ticket-modal').style.display='none'; }
+
+        function updateStats() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('stat-count').innerText = state.parcels.filter(p=>p.date === today).length;
+            document.getElementById('stat-cash').innerText = state.parcels.reduce((s,p)=>s+p.paid,0).toLocaleString() + " FC";
+        }
+
+        function updatePassword() {
+            const op = document.getElementById('old-pass').value;
+            const np = document.getElementById('new-pass').value;
+            if(op === state.adminPass && np === document.getElementById('conf-pass').value) {
+                state.adminPass = np; localStorage.setItem('td_key_v5', np);
+                alert("Code changé !"); location.reload();
+            } else alert("Erreur");
+        }
+
+        function secureReset() {
+            if(prompt("Code ADMIN pour effacer tout :") === state.adminPass) {
+                localStorage.removeItem('td_db_v5'); location.reload();
+            }
+        }
+
+        function refreshAll() { filterHistory(); updateStats(); }
+    </script>
+</body>
+</html>
